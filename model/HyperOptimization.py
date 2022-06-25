@@ -10,7 +10,7 @@ from hyperopt.pyll import scope
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 from preprocess.AnovaTestCategoricalFeature import AnovaTest
 from preprocess.SelectorNumericalFeature import FeatureSelector
@@ -68,8 +68,9 @@ class HyperOptimization(object):
 
         y_predicted = pipe.predict(dataset_df_eval)
 
-        mae = mean_absolute_error(target_eval, y_predicted)
-        return {'loss': mae, 'status': STATUS_OK}
+        rmse = np.sqrt(mean_squared_error(target_eval, y_predicted))
+
+        return {'loss': rmse, 'status': STATUS_OK}
 
     def get_fit_params(self, model_choice):
         fit_params = model_choice['fit_params']
@@ -139,12 +140,12 @@ class HyperOptimization(object):
         xgb_regressor = {
                             'model': xgb.XGBRegressor,
                             'params': {
-                                'max_depth': scope.int(hp.quniform("xgbregressor__max_depth", 2, 15, 1)),
+                                'max_depth': scope.int(hp.quniform("xgbregressor__max_depth", 4, 5, 1)),
                                 # 'min_child_weight': scope.float(hp.uniform('xgbregressor__min_child_weight', 0.58, 0.63)),
                                 # 'colsample_bytree': scope.float(hp.uniform('xgbregressor__colsample_bytree', 0.7, 0.8)),
-                                'learning_rate': scope.float(hp.quniform('xgbregressor__learning_rate', 0.09, 0.15, 0.01)),
+                                'learning_rate': scope.float(hp.quniform('xgbregressor__learning_rate', 0.1, 0.12, 0.01)),
                                 # 'gamma': hp.uniform('xgbregressor__gamma', 1, 2),
-                                'n_estimators': scope.int(hp.quniform('xgbregressor__n_estimator', 400, 550, 10))
+                                'n_estimators': scope.int(hp.quniform('xgbregressor__n_estimator', 350, 400, 10))
                             },
                             'fit_params': {
                                 'regressor__early_stopping_rounds': 50,
@@ -154,14 +155,14 @@ class HyperOptimization(object):
         lgbm_regressor = {
                              'model': lgb.LGBMRegressor,
                              'params': {
-                                 'max_depth': scope.int(hp.quniform('lgbmregressor__max_depth', 5, 15, 1)),
+                                 'max_depth': scope.int(hp.quniform('lgbmregressor__max_depth', 2, 3, 1)),
                                  # 'min_child_weight': scope.float(hp.uniform('lgbmregressor__min_child_weight', 0.5, 0.7)),
                                  # 'colsample_bytree': scope.float(hp.uniform('lgbmregressor__colsample_bytree', 0.8, 0.9)),
-                                 'learning_rate': scope.float(hp.quniform('lgbmregressor__learning_rate', 0.09, 0.16, 0.01)),
+                                 'learning_rate': scope.float(hp.quniform('lgbmregressor__learning_rate', 0.05, 0.9, 0.01)),
                                  # 'subsample': hp.uniform('lgbmregressor__subsample', 0.9, 1),
                                  # 'num_leaves': hp.choice('lgbmregressor__n_estimator__num_leaves',
                                  #                         np.arange(90, 140, 1, dtype=int)),
-                                 'n_estimators': scope.int(hp.quniform('lgbmregressor__n_estimator', 400, 500, 10))
+                                 'n_estimators': scope.int(hp.quniform('lgbmregressor__n_estimator', 480, 500, 10))
                              },
                              'fit_params': {
                                  'regressor__early_stopping_rounds': 50,
